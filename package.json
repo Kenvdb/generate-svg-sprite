@@ -1,0 +1,29 @@
+{
+  "name": "generate-svg-sprite",
+  "version": "1.1.2",
+  "description": "Generate a SVG sprite which can be used as a background image...",
+  "main": "./lib/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "generate-svg-sprite": "bin/generate-svg-sprite"
+  },
+  "keywords": [
+    "svg",
+    "sprite",
+    "generator"
+  ],
+  "author": "K van den Broek",
+  "license": "MIT",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-exec": "^0.4.6"
+  },
+  "dependencies": {
+    "async": "^1.3.0",
+    "cheerio": "^0.19.0",
+    "commander": "^2.8.1",
+    "es6-promise": "^2.3.0"
+  }
+}
