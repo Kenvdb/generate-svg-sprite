@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" />
+
+    <style>
+        ul, ul li {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        ul {
+            padding-top: 15px;
+        }
+        ul li {
+            display: inline-block;
+            text-align: center;
+            background: #ccc 0 0 no-repeat;
+            border-radius: 2px;
+            padding: 10px;
+            margin: 0 10px 10px 0;
+        }
+        ul li span:first-child {
+            margin: 5px auto 5px auto;
+        }
+        span + span {
+            font-family: Monospace, Arial, "Helvetica Neue", Helvetica, sans-serif;
+            font-size: 11px;
+            margin: 0 10px 0 10px;
+        }
+        h1, h2, h3 {
+            margin: 0;
+            padding: 0;
+        }
+        h3 {
+            padding-bottom: 4px;
+        }
+        span.label {
+            font-weight: normal;
+            font-size: 80%;
+        }
+        .icon {
+            background-size: 100% 100%;
+        }
+        pre {
+            background-color: transparent;
+            border: 0;
+            padding: 0;
+            margin: 10px 0 0 0;
+            color: inherit;
+            font-size: 12px;
+        }
+        .settings {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+        }
+        .settings button {
+            background: none !important;
+            color: inherit;
+            border: none;
+            padding: 0! important;
+            font: inherit;
+            cursor: pointer;
+            outline: inherit !important;
+        }
+        .settings > span {
+            padding: 0 10px;
+        }
+        [data-view="header"] .header {
+            position: relative;
+            margin-top: 30px;
+        }
+        [data-view="icons"] > .column {
+            margin-top: 10px;
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+    <div class="row" data-view="header">
+        <div class="column col-md-12">
+            <div class="header">
+                <h1>Icon Sprites</h1>
+                <div class="settings">
+                    <button data-type="plus"><span class="glyphicon glyphicon-plus"></span></button>
+                    <span></span>
+                    <button data-type="minus"><span class="glyphicon glyphicon-minus"></span></button>
+                </div>
+            </div>
+            <hr />
+            <div class="alert alert-info" role="alert">
+                Icon sprites are SVG's which can be applied on your CSS selector as a background image with an hash, for example...
+                <pre>.icon.icon-facebook { <strong>background-image: url("/assets/img/icon-sprite-social.svg#icon-facebook");</strong> }</pre>
+            </div>
+        </div>
+    </div>
+    <div class="row" data-view="icons"></div>
+</div>
+
+<script>
+    var APP = APP || {};
+
+    APP.basePath = '';
+    APP.scaledSize = 100;
+    APP.sprites = [];
+
+    APP.getScaledSize = function () {
+        return APP.scaledSize/100;
+    }
+
+    APP.getSpriteTemplate = function (title, iconPath) {
+        var template = $('<div/>', {
+            'class' : 'column col-md-12'
+        });
+
+        var heading = $('<h3/>', {
+            'text' : title.charAt(0).toUpperCase() + title.slice(1)
+        });
+
+        var label = $('<span/>', {
+            'class': 'label label-info',
+            'text': iconPath
+        });
+
+        var ul = $('<ul/>');
+
+        template.append(heading);
+        template.append(label);
+        template.append(ul);
+
+        return template;
+    }
+
+    APP.getIconTemplate = function (iconPath, iconId, size) {
+        var li = $('<li/>'),
+          icon = $('<span/>'),
+          title = $('<span/>'),
+          background = iconPath +'#' + iconId,
+          scaledSize = APP.getScaledSize();
+
+        icon
+        .addClass('icon')
+        .css({
+            'display': 'block',
+            'background-image' : 'url(' + background + ')',
+            'width' : (size.width * scaledSize) + 'px',
+            'height' : (size.height * scaledSize)  + 'px'
+        });
+
+        title.text(iconId);
+
+        li.append(icon);
+        li.append(title);
+
+        return li;
+    }
+
+    APP.getAlertTemplate = function (title, message) {
+        var alert = $('<div/>', {
+            'class' : 'alert alert-danger',
+            'role' : 'alert',
+            'text' : message
+        })
+
+        var strong = $('<strong/>', {
+            'text' : title + ' '
+        })
+
+        alert.prepend( strong );
+
+        return alert;
+    }
+
+    APP.init = function () {
+        APP.loadConfig();
+        APP.bind();
+    }
+
+    APP.loadConfig = function () {
+        $.get('package.json', APP.create);
+    }
+
+    APP.bind = function() {
+        $('button')
+        .off('click', APP.onClick)
+        .on('click', APP.onClick);
+    }
+
+    APP.onClick = function() {
+        var type = $(this).data('type');
+
+        switch (type) {
+            case 'minus':
+                APP.scaledSize -= 10;
+                break;
+            default:
+            case 'plus':
+                APP.scaledSize += 10;
+                break;
+        }
+
+        APP.renderView();
+    }
+
+    APP.create = function (data) {
+        var icons = data.config.icons || {},
+          basePath = data.config.basePath || '/';
+
+        if (!Object.keys(icons).length) {
+            APP.fail();
+        } else {
+            APP.fetchData(icons, basePath);
+        }
+    }
+
+    APP.fail = function () {
+        var alert = APP.getAlertTemplate('Oh snap!', 'Could not find any icon configurations...'),
+          headerObj = $('div[data-view="header"]');
+
+        headerObj.find('.column').find('.alert, .settings').remove();
+        headerObj.find('.column').append(alert);
+    }
+
+    APP.fetchData = function (icons, basePath) {
+        APP.basePath = basePath;
+
+        var key, svg;
+
+        for (key in icons) {
+            if (icons.hasOwnProperty(key)) {
+                svg = basePath + icons[key].substring((icons[key].indexOf('-o') + 3), icons[key].length);
+                APP.addSprite(key, svg)
+            }
+        }
+
+        APP.getFiles().then(function(){
+            APP.renderView();
+        })
+    }
+
+    APP.addSprite = function(id, svg) {
+        if (typeof id === 'undefined' || typeof svg === 'undefined') return;
+
+        APP.sprites.push({
+            id : id,
+            svg : svg,
+            items : []
+        });
+    }
+
+    APP.getById = function(id) {
+        return APP.sprites.filter(function(obj) {
+            if(obj.id === id) {
+                return obj
+            }
+        })[0]
+    }
+
+    APP.getFiles = function () {
+        return $.when.apply(null, APP.sprites.map(function(resource){
+            return $.get(resource.svg, function(data){
+                var icons = $(data).find('.icon');
+
+                icons.each(function () {
+                    var viewbox = $(this).attr('viewBox').split(' '),
+                      id = $(this).attr('id');
+
+                    resource.size = {};
+                    resource.size.width = viewbox[2];
+                    resource.size.height = viewbox[3];
+
+                    if (resource.items.indexOf(id) === -1) {
+                        resource.items.push(id)
+                    }
+                })
+            })
+        }));
+    }
+
+    APP.fixSVGStackBackground = function () {
+        var file, s, filePath;
+
+        filePath = 'jquery.fixsvgstack.js';
+
+        file = document.createElement('script');
+        file.type = 'text/javascript';
+        file.async = true;
+        file.src = APP.basePath + filePath;
+
+        s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(file, s);
+
+        // bind load event
+        file.addEventListener('load', function(){
+            if (!$.fn.fixSVGStackBackground) return;
+
+            $('.icon').fixSVGStackBackground();
+        });
+    }
+
+    APP.resetView = function () {
+        $('div[data-view="icons"]').html('');
+        $('div[data-view="header"] div.settings > span').text(APP.scaledSize + '%');
+    }
+
+    APP.renderView = function () {
+        var i;
+
+        APP.resetView();
+
+        for (i in APP.sprites) {
+            if (APP.sprites[i].items.length) {
+                var id = APP.sprites[i].id,
+                  file = APP.sprites[i].svg,
+                  size = APP.sprites[i].size,
+                  template = APP.getSpriteTemplate(id, file);
+
+                $.each(APP.sprites[i].items, function (k,iconId) {
+                    template.find('ul').append( APP.getIconTemplate(file, iconId, size) );
+                })
+
+                $('div[data-view="icons"]').append(template);
+            }
+        }
+
+        APP.fixSVGStackBackground();
+    }
+
+    $(document).ready(function(){
+        APP.init();
+    })
+</script>
+
+
+
+</body>
+</html>
