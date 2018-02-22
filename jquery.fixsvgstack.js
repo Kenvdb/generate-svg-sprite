@@ -95,23 +95,47 @@
 
             // Here is the quick and dirty hack...
             if (USE_DIRTY_CSS_CONTENT_HACK && url.indexOf('.svg#') === -1) {
-                var style = getComputedStyle($el[0], null), icon;
+                var style = getComputedStyle($el[0], null),
+                  isPseudo = false;
 
                 // Element has no background image, try to fetch :before element...
                 if (style.backgroundImage.indexOf('.svg') === -1) {
                     style = getComputedStyle($el[0], ':before');
-                    icon = document.createElement("div");
+                    isPseudo = (style.backgroundImage.indexOf('.svg') !== -1);
+                }
 
-                    var styles = '';
+                // Element has no background image, try to fetch :after element...
+                if (style.backgroundImage.indexOf('.svg') === -1) {
+                    style = getComputedStyle($el[0], ':after');
+                    isPseudo = (style.backgroundImage.indexOf('.svg') !== -1);
+                }
+
+                if (isPseudo) {
+                    var icon = document.createElement("div"),
+                        size = style.getPropertyValue('background-size'),
+                        width = style.getPropertyValue('width'),
+                        height = style.getPropertyValue('height'),
+                        styles = '';
+
+                    // Little hacky, the width of the pseudo element isn't correct,
+                    // because it's the computed width of the parent item, so instead of using this width,
+                    // use the background-size as a value for both width and height values...
+                    if (size.length && size.indexOf('auto') === -1 && size.indexOf('%') === -1) {
+                        size = size.split(' ');
+                        width = ( size.length === 2 ? size[0] : size[0] );
+                        height = ( size.length === 2 ? size[1] : size[0] );
+                    }
+
                     styles += 'display:' + style.getPropertyValue('display');
                     styles += ';background-image:' + style.getPropertyValue('background-image');
                     styles += ';background-position:' + style.getPropertyValue('background-position');
                     styles += ';background-repeat:' + style.getPropertyValue('background-repeat');
                     styles += ';background-size:' + style.getPropertyValue('background-size');
                     styles += ';position:' + style.getPropertyValue('position');
-                    styles += ';width:' + style.getPropertyValue('width');
-                    styles += ';height:' + style.getPropertyValue('height');
+                    styles += ';width:' + width;
+                    styles += ';height:' + height;
                     styles += ';left:' + style.getPropertyValue('left');
+                    styles += ';right:' + style.getPropertyValue('right');
                     styles += ';top:' + style.getPropertyValue('top');
                     styles += ';transform' + style.getPropertyValue('transform');
                     styles += ';';
@@ -157,7 +181,6 @@
     // Fix for SVG Stacks in img Tags
     $.fn.fixSVGStack = function () {
         this.each(function () {
-
             var $el = $(this);
             var url = $el.attr('src');
 
