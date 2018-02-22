@@ -1,6 +1,6 @@
 {
   "name": "generate-svg-sprite",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Generate a SVG sprite which can be used as a background image...",
   "main": "./lib/main.js",
   "scripts": {
