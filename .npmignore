@@ -32,3 +32,6 @@ package-lock.json
 
 # ide
 .idea/
+
+# npm ignore only
+src/
