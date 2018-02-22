@@ -34,6 +34,7 @@ let getSpriteXml = function (svgs, color) {
 
                 if (typeof color !== 'undefined') {
                     content = content.replace(/<style[^\0]*?<\/style>/g, '');
+                    content = content.replace(/fill="(.*?)"\s/g, '');
                 }
 
                 content = content.replace(/<title>(.*?)<\/title>/g, '');
