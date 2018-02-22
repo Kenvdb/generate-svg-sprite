@@ -9,7 +9,7 @@ import {default as async} from "async";
 
 export default function () {
     program
-        .version("1.1.4")
+        .version("1.1.5")
         .option("-c --color <color>", "Color of sprite icons")
         .option("-d --directory <directory>", "SVG folder")
         .option("-e --excel <csv>", "CSV file path")
